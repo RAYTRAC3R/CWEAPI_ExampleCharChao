@@ -1,5 +1,3 @@
-# Character Chao Documentation
+# Scarab Character Chao
 
-This is an example of how to set up a Character Chao mod in CWE.
-
-Credit to PyraBlueArts on Twitter for the concept of Cosmo the Seedrian Chao.
+This is the source for https://gamebanana.com/mods/498405
