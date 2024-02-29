@@ -1,0 +1,4 @@
+/Release/**
+/.vs/**
+/x64/**
+UpgradeLog.htm

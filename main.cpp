@@ -8,14 +8,28 @@ extern "C"
 	void (*RegisterDataFunc)(void* ptr);
 
 	//Define Models
-	ModelInfo* MDLExampleChao;
+	ModelInfo* MDLScarabChao;
+	ModelInfo* MDLscarabmask;
+
+	int ScarabMaskID;
+
+	NJS_TEXNAME ScarabTex[10];
+	NJS_TEXLIST scarab_texlist = { arrayptrandlength(ScarabTex) };
+
+	BlackMarketItemAttributes BMScarabMask = { 1000, 500, 0, -1, -1, 0 };
 
 	//Define a pointer function for pEvolveFunc
-	static bool CosmoEvolve(ObjectMaster* tp)
+	static bool ScarabEvolve(ObjectMaster* tp)
 	{
-		if (tp->Data1.Chao->ChaoDataBase_ptr->Alignment > 0.75 && tp->Data1.Chao->ChaoDataBase_ptr->SA2BCharacterBonds[2].a > 75)
+		Uint16* accessories = (Uint16*)((int)(tp->Data1.Chao->ChaoDataBase_ptr) + 0x614);
+		Uint8 eye_color = *(Uint8*)((int)(tp->Data1.Chao->ChaoDataBase_ptr) + 0x59A);
+		//std::string PrintAccessoryString = std::to_string(ScarabMaskID);
+		//PrintDebug(PrintAccessoryString.c_str());
+		//std::string PrintEyeColorString = std::to_string(eye_color);
+		//PrintDebug(PrintEyeColorString.c_str());
+		if (eye_color == 7 && accessories[Face] == (ScarabMaskID + 1))
 		{
-			PrintDebug("Chao evolving");
+			PrintDebug("Chao evolving into Scarab");
 			return true;
 		}
 		else
@@ -26,25 +40,28 @@ extern "C"
 	void CWELoad(CWE_REGAPI* cwe_api, ObjectMaster* tp)
 	{
 
+		cwe_api->RegisterChaoTexlistLoad("ScarabMask", &scarab_texlist);
+		ScarabMaskID = cwe_api->RegisterChaoAccessory(Face, MDLscarabmask->getmodel(), &scarab_texlist, &BMScarabMask, "Scarab Mask", "Don\'t worry, this crossover is authorized.");
+
 		//Define Character Chao data:
 		CWE_API_CHAO_DATA CharChao_pData =
 		{
-			MDLExampleChao->getmodel(),	//pObject
+			MDLScarabChao->getmodel(),	//pObject
 			{0},				//pSecondEvoList[5]
 
-			"CosmoChao",			//TextureName
+			"ScarabChao",			//TextureName
 			7,				//TextureCount
-			0xFF8CB2B3,			//IconColor - hex, 6 bytes
-			ICON_TYPE_HALO,			//IconType
+			0xFFFBAC66,			//IconColor - hex, 6 bytes
+			ICON_TYPE_SPIKY,			//IconType
 			NULL,				//pIconData
 
-			CosmoEvolve,			//pEvolveFunc 
+			ScarabEvolve,			//pEvolveFunc 
 
 			0,				//Flags
-			"Cosmo",			//Name
-			"cwe_cosmo",			//id
+			"Scarab",			//Name
+			"cwe_rt_scarab",			//id
 		};
-		
+
 		//add the Chao Type
 		cwe_api->AddChaoType(&CharChao_pData);
 	}
@@ -56,7 +73,8 @@ extern "C"
 
 		std::string pathStr = std::string(path) + "\\";
 
-		MDLExampleChao = new ModelInfo(pathStr + "MDLExampleChao.sa2mdl");
+		MDLScarabChao = new ModelInfo(pathStr + "ScarabChao.sa2mdl");
+		MDLscarabmask = new ModelInfo(pathStr + "ScarabMask.sa2mdl");
 
 		RegisterDataFunc = (void (*)(void* ptr))GetProcAddress(h, "RegisterDataFunc");
 		RegisterDataFunc(CWELoad);
