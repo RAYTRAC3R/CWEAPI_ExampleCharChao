@@ -40,7 +40,7 @@ extern "C"
 
         if (accessories[Head] == ClassicTopHatID + 1 && accessories[Generic2] == ClassicBearTieID + 1)
         {
-            PrintDebug("Chao evolving into FreddyFaz");
+            //PrintDebug("Chao evolving into FreddyFaz");
             return true;
         }
         else
