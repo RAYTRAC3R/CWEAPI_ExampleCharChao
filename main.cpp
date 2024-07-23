@@ -7,29 +7,28 @@ extern "C"
 	//registering data functions. - Needs to exist.
 	void (*RegisterDataFunc)(void* ptr);
 
+	//Lens function - Needed for CWE to recognize the lens.
+	__declspec(dllexport) void(__cdecl* ALS_LensSpecial)(ObjectMaster*, ObjectMaster*);
+
 	//Define Models
-	ModelInfo* MDLScarabChao;
-	ModelInfo* MDLscarabmask;
+	ModelInfo* MDLAIChao;
+	ModelInfo* MDLHollowLens;
 
-	int ScarabMaskID;
+	//Generate an ID for each lens
+	int HollowLensID;
 
-	NJS_TEXNAME ScarabTex[10];
-	NJS_TEXLIST scarab_texlist = { arrayptrandlength(ScarabTex) };
+	NJS_TEXNAME HollowTex[10];
+	NJS_TEXLIST hollow_texlist = { arrayptrandlength(HollowTex) };
 
-	BlackMarketItemAttributes BMScarabMask = { 1000, 500, 0, -1, -1, 0 };
+	BlackMarketItemAttributes HollowLens = { 1000, 500, 0, -1, -1, 0 };
 
 	//Define a pointer function for pEvolveFunc
-	static bool ScarabEvolve(ObjectMaster* tp)
+	static bool AIEvolve(ObjectMaster* tp)
 	{
-		Uint16* accessories = (Uint16*)((int)(tp->Data1.Chao->ChaoDataBase_ptr) + 0x614);
 		Uint8 eye_color = *(Uint8*)((int)(tp->Data1.Chao->ChaoDataBase_ptr) + 0x59A);
-		//std::string PrintAccessoryString = std::to_string(ScarabMaskID);
-		//PrintDebug(PrintAccessoryString.c_str());
-		//std::string PrintEyeColorString = std::to_string(eye_color);
-		//PrintDebug(PrintEyeColorString.c_str());
-		if (eye_color == 7 && accessories[Face] == (ScarabMaskID + 1))
+		if (tp->Data1.Chao->ChaoDataBase_ptr->Alignment > 0.75 && eye_color == (HollowLensID + 1))
 		{
-			PrintDebug("Chao evolving into Scarab");
+			PrintDebug("Chao evolving into AI Chao");
 			return true;
 		}
 		else
@@ -39,27 +38,31 @@ extern "C"
 	//main CWE Load function -- Important stuff like adding your CWE mod goes here
 	void CWELoad(CWE_REGAPI* cwe_api, ObjectMaster* tp)
 	{
+		cwe_api->RegisterChaoTexlistLoad("HollowLens", &hollow_texlist);
 
-		cwe_api->RegisterChaoTexlistLoad("ScarabMask", &scarab_texlist);
-		ScarabMaskID = cwe_api->RegisterChaoAccessory(Face, MDLscarabmask->getmodel(), &scarab_texlist, &BMScarabMask, "Scarab Mask", "Don\'t worry, this crossover is authorized.");
+		//Register your lens to the black market:
+		cwe_api->RegisterChaoSpecial(MDLHollowLens->getmodel(), &hollow_texlist, &HollowLens, ALS_LensSpecial, NULL, "Hollow Lens", "The sockets are empty.", false);
+
+		//Associate the lens as a custom eye color:
+		cwe_api->RegisterEyeColor("HollowLens", &hollow_texlist, HollowLensID);
 
 		//Define Character Chao data:
 		CWE_API_CHAO_DATA CharChao_pData =
 		{
-			MDLScarabChao->getmodel(),	//pObject
+			MDLAIChao->getmodel(),	//pObject
 			{0},				//pSecondEvoList[5]
 
-			"ScarabChao",			//TextureName
+			"AIChao",			//TextureName
 			7,				//TextureCount
-			0xFFFBAC66,			//IconColor - hex, 6 bytes
-			ICON_TYPE_SPIKY,			//IconType
+			0xFF247201,			//IconColor - hex, 6 bytes
+			ICON_TYPE_BALL,			//IconType
 			NULL,				//pIconData
 
-			ScarabEvolve,			//pEvolveFunc 
+			AIEvolve,			//pEvolveFunc 
 
 			0,				//Flags
-			"Scarab",			//Name
-			"cwe_rt_scarab",			//id
+			"AIChao",			//Name
+			"cwe_rt_aichao",			//id
 		};
 
 		//add the Chao Type
@@ -73,8 +76,11 @@ extern "C"
 
 		std::string pathStr = std::string(path) + "\\";
 
-		MDLScarabChao = new ModelInfo(pathStr + "ScarabChao.sa2mdl");
-		MDLscarabmask = new ModelInfo(pathStr + "ScarabMask.sa2mdl");
+		//Lens function - This talks to CWE to get the lens to work when registering it as a special object.
+		ALS_LensSpecial = (decltype(ALS_LensSpecial))GetProcAddress(GetModuleHandle(L"CWE"), "ALS_LensSpecial");
+
+		MDLAIChao = new ModelInfo(pathStr + "AIChao.sa2mdl");
+		MDLHollowLens = new ModelInfo(pathStr + "lensHollow.sa2mdl");
 
 		RegisterDataFunc = (void (*)(void* ptr))GetProcAddress(h, "RegisterDataFunc");
 		RegisterDataFunc(CWELoad);
